@@ -38,8 +38,17 @@ gltfLOader.load('models/desert.gltf', (gltf) => {
     backgroundGroup.add(child);
     backgroundGroup.scale.set(0.1, 0.1, 0.1);
     scene.add(backgroundGroup);
+
+    const worldSpin = () => {
+      const tl = gsap.timeline();
+      tl.to(backgroundGroup.rotation, {
+        duration: 2,
+        y: Math.PI * 4,
+      });
+      return tl;
+    };
+    worldSpin();
   }
-  // console.log(backgroundGroup);
 });
 
 /*************************
@@ -54,8 +63,8 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
     dinoGroup.scale.set(0.1, 0.1, 0.1);
     scene.add(dinoGroup);
 
-    // Animation
-    const dinoMotion = () => {
+    // DINO ANIMATIONS
+    const dinoForward = () => {
       const tl = gsap.timeline();
       tl.fromTo(
         dinoGroup.position,
@@ -64,7 +73,7 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
         },
         {
           x: 3,
-          duration: 3,
+          ease: 'power4.out',
         },
       );
       return tl;
@@ -75,67 +84,104 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
       tl.to(dinoGroup.rotation, {
         duration: 2,
         y: -Math.PI,
+        ease: 'power4.out',
       });
       return tl;
     };
 
-    // dinoSpin();
+    const dinoSpin2 = () => {
+      const tl = gsap.timeline();
+      tl.to(dinoGroup.rotation, {
+        y: Math.PI / 6,
+        ease: 'power4.out',
+      });
+      return tl;
+    };
 
-    // const dinoBack = () => {
-    //   const tl = gsap.timeline();
-    //   tl.fromTo(
-    //     dinoGroup.position,
-    //     {
-    //       x: 3,
-    //     },
-    //     {
-    //       x: -2,
-    //       duration: 3,
-    //     },
-    //   );
-    //   return tl;
-    // };
+    const dinoBack = () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        dinoGroup.position,
+        {
+          x: 3,
+        },
+        {
+          x: -2,
+          ease: 'power4.out',
+        },
+      );
+      return tl;
+    };
 
-    // Timeline
-    // main.add(textOne());
-    // main.add(textTwo());
-    // main.add(dinoMotion());
-    // main.add(dinoSpin(), '-=1');
-    // main.add(dinoBack());
+    // TEXT BOX ANIMATIONS
+    const box1 = () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        '.box',
+        {
+          opacity: 0.7,
+          y: 800,
+        },
+        {
+          opacity: 0.7,
+          y: -500,
+        },
+      );
+      return tl;
+    };
+
+    const box2 = () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        '.box2',
+        {
+          opacity: 0.7,
+          y: 800,
+        },
+        {
+          opacity: 0.7,
+          y: -500,
+        },
+      );
+      return tl;
+    };
+
+    const box3 = () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        '.box3',
+        {
+          opacity: 0.7,
+          y: 1500,
+        },
+        {
+          opacity: 0.7,
+          y: -500,
+        },
+      );
+      return tl;
+    };
 
     let tl = gsap.timeline({
       scrollTrigger: {
         trigger: '.three-wrapper',
         start: 'top top', // [trigger] [scroller] positions
-        // end: '20px 80%', // [trigger] [scroller] positions
-        scrub: true,
+        end: '+=1500',
+        scrub: 1,
         pin: true,
-        markers: true,
-
-        toggleClass: 'active',
-        anticipatePin: 1,
-        snap: 1 / 10, // progress increment
-        pinReparent: true, // moves to documentElement during
-        invalidateOnRefresh: true, // clears start values on
+        // markers: true,
       },
     });
 
     // add animations and labels to the timeline
-    tl.addLabel('start').fromTo(
-      '.box',
-      { opacity: 1, y: 500 },
-      { opacity: 1, y: -300 },
-    );
-    tl.addLabel('middle').fromTo(
-      '.box2',
-      { opacity: 0, y: 500 },
-      { opacity: 1, y: -300 },
-    );
-    tl.addLabel('end').fromTo(
-      '.box3',
-      { opacity: 0, y: 500 },
-      { opacity: 1, y: -300 },
-    );
+
+    tl.add(box1());
+    tl.add(dinoForward());
+    tl.add(box2());
+    tl.add(dinoSpin());
+    tl.add(box3());
+    tl.add(dinoBack());
+    tl.add(dinoSpin2());
   }
 });
 
