@@ -2,7 +2,7 @@ import './style.css';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
+import * as dat from 'dat.gui';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 import { CullFaceNone } from 'three';
@@ -19,31 +19,59 @@ const canvas = document.querySelector('canvas.webgl');
  *************************/
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xfcf8b1);
+scene.background = new THREE.Color(0xede0d4);
 
 /*************************
  ******** LOADERS
  *************************/
 
-const gltfLOader = new GLTFLoader();
+const gltfLoader = new GLTFLoader();
+const textureLoader = new THREE.TextureLoader();
+
+/*************************
+ ******** TEXTURES
+ *************************/
+
+const bakedTexture = textureLoader.load('models/baked-deset.jpg');
+bakedTexture.flipY = false;
+bakedTexture.encoding = THREE.sRGBEncoding;
+
+/*************************
+ ******** MATERIALS
+ *************************/
+
+//  Baked material
+const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
 
 /*************************
  ******** DESERT
  *************************/
 
-gltfLOader.load('models/desert.gltf', (gltf) => {
+gltfLoader.load('models/dino-bake.glb', (gltf) => {
   const children = [...gltf.scene.children];
   const backgroundGroup = new THREE.Group();
   for (const child of children) {
     backgroundGroup.add(child);
     backgroundGroup.scale.set(0.1, 0.1, 0.1);
+
+    // scene.traverse(function (child) {
+    //   if (child.isMesh) {
+    //     child.castShadow = true;
+    //     child.receiveShadow = true;
+    //   }
+    // });
+
+    // Apply baked texture
+    scene.traverse((child) => {
+      child.material = bakedMaterial;
+    });
     scene.add(backgroundGroup);
 
     const worldSpin = () => {
       const tl = gsap.timeline();
       tl.to(backgroundGroup.rotation, {
-        duration: 2,
-        y: Math.PI * 4,
+        duration: 6,
+        y: Math.PI * 2,
       });
       return tl;
     };
@@ -55,12 +83,23 @@ gltfLOader.load('models/desert.gltf', (gltf) => {
  ******** DINOSAUR
  *************************/
 
-gltfLOader.load('models/dino.gltf', (gltf) => {
+gltfLoader.load('models/dino.gltf', (gltf) => {
   const children = [...gltf.scene.children];
+
   const dinoGroup = new THREE.Group();
   for (const child of children) {
     dinoGroup.add(child);
+    // SET SCALE of all mesh elements
     dinoGroup.scale.set(0.1, 0.1, 0.1);
+
+    // SET SHADOWS TO CAST of all mesh elements
+    // scene.traverse(function (child) {
+    //   if (child.isMesh) {
+    //     child.castShadow = true;
+    //     child.receiveShadow = true;
+    //   }
+    // });
+    // Add dinosaur
     scene.add(dinoGroup);
 
     // DINO ANIMATIONS
@@ -82,7 +121,7 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
     const dinoSpin = () => {
       const tl = gsap.timeline();
       tl.to(dinoGroup.rotation, {
-        duration: 2,
+        duration: 1,
         y: -Math.PI,
         ease: 'power4.out',
       });
@@ -92,7 +131,7 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
     const dinoSpin2 = () => {
       const tl = gsap.timeline();
       tl.to(dinoGroup.rotation, {
-        y: Math.PI / 6,
+        y: Math.PI / 3,
         ease: 'power4.out',
       });
       return tl;
@@ -166,7 +205,7 @@ gltfLOader.load('models/dino.gltf', (gltf) => {
       scrollTrigger: {
         trigger: '.three-wrapper',
         start: 'top top', // [trigger] [scroller] positions
-        end: '+=1500',
+        end: '+=4000',
         scrub: 1,
         pin: true,
         // markers: true,
@@ -253,11 +292,14 @@ camera.updateProjectionMatrix();
  *************************/
 
 // Ambient light
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
 // Directional light
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(4.5, 3.4, -1.3);
+// ADD SHADOWS
+directionalLight.castShadow = true;
 scene.add(directionalLight);
 
 /*************************
@@ -276,6 +318,13 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+/*************************
+ ******** SHADOWS
+ *************************/
+
+renderer.shadowMap.enabled = true;
 
 /*************************
  ******** TICK
@@ -292,5 +341,22 @@ tick();
  ******** HELPERS
  *************************/
 
-const axesHelper = new THREE.AxesHelper(5);
+// const axesHelper = new THREE.AxesHelper(5);
 // scene.add(axesHelper);
+const directionalLightHelper = new THREE.DirectionalLightHelper(
+  directionalLight,
+  5,
+);
+// scene.add(directionalLightHelper);
+
+/*************************
+ ******** DEBUG
+ *************************/
+
+// const gui = new dat.GUI();
+// Light
+// gui.add(directionalLight.position, 'x').min(-5).max(10).step(0.01);
+// gui.add(directionalLight.position, 'y').min(-5).max(10).step(0.01);
+// gui.add(directionalLight.position, 'z').min(-5).max(10).step(0.01);
+// gui.add(directionalLight, 'intensity').min(-5).max(10).step(0.01);
+// gui.add(ambientLight, 'intensity').min(-5).max(10).step(0.01);
