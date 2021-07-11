@@ -1,4 +1,6 @@
+// CSS
 import './style.css';
+// JS
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -53,6 +55,7 @@ gltfLoader.load('models/dino-bake.glb', (gltf) => {
   for (const child of children) {
     backgroundGroup.add(child);
     backgroundGroup.scale.set(0.1, 0.1, 0.1);
+    backgroundGroup.position.set(0, -0.25, 0);
 
     // scene.traverse(function (child) {
     //   if (child.isMesh) {
@@ -69,13 +72,20 @@ gltfLoader.load('models/dino-bake.glb', (gltf) => {
 
     const worldSpin = () => {
       const tl = gsap.timeline();
-      tl.to(backgroundGroup.rotation, {
-        duration: 6,
-        y: Math.PI * 2,
-      });
+      tl.fromTo(
+        backgroundGroup.rotation,
+        {
+          y: -Math.PI,
+        },
+        {
+          y: 0,
+          duration: 6,
+          ease: 'power4.out',
+        },
+      );
       return tl;
     };
-    worldSpin();
+    // worldSpin();
   }
 });
 
@@ -91,6 +101,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
     dinoGroup.add(child);
     // SET SCALE of all mesh elements
     dinoGroup.scale.set(0.1, 0.1, 0.1);
+    dinoGroup.position.set(0, -0.25, 0);
 
     // SET SHADOWS TO CAST of all mesh elements
     // scene.traverse(function (child) {
@@ -103,6 +114,26 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
     scene.add(dinoGroup);
 
     // DINO ANIMATIONS
+
+    const dinoJump = () => {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        dinoGroup.position,
+        {
+          y: 0,
+        },
+        {
+          y: 0.25,
+          repeat: 1,
+          yoyo: true,
+          repeat: 3,
+          duration: 0.05,
+          ease: 'power4.out',
+        },
+      );
+      return tl;
+    };
+
     const dinoForward = () => {
       const tl = gsap.timeline();
       tl.fromTo(
@@ -131,7 +162,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
     const dinoSpin2 = () => {
       const tl = gsap.timeline();
       tl.to(dinoGroup.rotation, {
-        y: Math.PI / 3,
+        y: Math.PI / 6,
         ease: 'power4.out',
       });
       return tl;
@@ -159,11 +190,12 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
         '.box',
         {
           opacity: 0.7,
-          y: 800,
+          y: 1000,
         },
         {
           opacity: 0.7,
-          y: -500,
+          y: 0,
+          ease: 'none',
         },
       );
       return tl;
@@ -175,11 +207,12 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
         '.box2',
         {
           opacity: 0.7,
-          y: 800,
+          y: 1250,
         },
         {
           opacity: 0.7,
-          y: -500,
+          y: 0,
+          ease: 'none',
         },
       );
       return tl;
@@ -191,11 +224,12 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
         '.box3',
         {
           opacity: 0.7,
-          y: 1500,
+          y: 1750,
         },
         {
           opacity: 0.7,
-          y: -500,
+          y: 0,
+          ease: 'none',
         },
       );
       return tl;
@@ -205,7 +239,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
       scrollTrigger: {
         trigger: '.three-wrapper',
         start: 'top top', // [trigger] [scroller] positions
-        end: '+=4000',
+        end: '+=3000',
         scrub: 1,
         pin: true,
         // markers: true,
@@ -213,7 +247,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
     });
 
     // add animations and labels to the timeline
-
+    tl.add(dinoJump());
     tl.add(box1());
     tl.add(dinoForward());
     tl.add(box2());
@@ -324,7 +358,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
  ******** SHADOWS
  *************************/
 
-renderer.shadowMap.enabled = true;
+// renderer.shadowMap.enabled = true;
 
 /*************************
  ******** TICK
@@ -343,10 +377,10 @@ tick();
 
 // const axesHelper = new THREE.AxesHelper(5);
 // scene.add(axesHelper);
-const directionalLightHelper = new THREE.DirectionalLightHelper(
-  directionalLight,
-  5,
-);
+// const directionalLightHelper = new THREE.DirectionalLightHelper(
+//   directionalLight,
+//   5,
+// );
 // scene.add(directionalLightHelper);
 
 /*************************
