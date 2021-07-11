@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-import { CullFaceNone } from 'three';
+import { AdditiveBlending, CullFaceNone } from 'three';
 gsap.registerPlugin(ScrollTrigger);
 
 /*************************
@@ -37,6 +37,9 @@ const textureLoader = new THREE.TextureLoader();
 const bakedTexture = textureLoader.load('models/baked-deset.jpg');
 bakedTexture.flipY = false;
 bakedTexture.encoding = THREE.sRGBEncoding;
+
+// Particle texture
+const particleTexture = textureLoader.load('particles/glow.png');
 
 /*************************
  ******** MATERIALS
@@ -85,7 +88,6 @@ gltfLoader.load('models/dino-bake.glb', (gltf) => {
       );
       return tl;
     };
-    // worldSpin();
   }
 });
 
@@ -126,7 +128,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
           y: 0.25,
           repeat: 1,
           yoyo: true,
-          repeat: 3,
+          repeat: 5,
           duration: 0.05,
           ease: 'power4.out',
         },
@@ -143,7 +145,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
         },
         {
           x: 3,
-          ease: 'power4.out',
+          ease: 'back.out(1.7)',
         },
       );
       return tl;
@@ -154,7 +156,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
       tl.to(dinoGroup.rotation, {
         duration: 1,
         y: -Math.PI,
-        ease: 'power4.out',
+        ease: 'back.out(1.7)',
       });
       return tl;
     };
@@ -163,7 +165,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
       const tl = gsap.timeline();
       tl.to(dinoGroup.rotation, {
         y: Math.PI / 6,
-        ease: 'power4.out',
+        ease: 'back.out(1.7)',
       });
       return tl;
     };
@@ -177,7 +179,7 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
         },
         {
           x: -2,
-          ease: 'power4.out',
+          ease: 'back.out(1.7)',
         },
       );
       return tl;
@@ -256,6 +258,44 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
     tl.add(dinoBack());
     tl.add(dinoSpin2());
   }
+
+  /*************************
+   ******** FIREFLIES
+   *************************/
+
+  // Geometry
+  const firefliesGeometry = new THREE.BufferGeometry();
+  // Fill with random coords in space
+  const firefliesCount = 38;
+  const positionArray = new Float32Array(firefliesCount * 3);
+
+  for (let i = 0; i < firefliesCount; i++) {
+    positionArray[i * 3 + 0] = (Math.random() - 0.5) * 8;
+    positionArray[i * 3 + 1] = Math.random() * 2;
+    positionArray[i * 3 + 2] = (Math.random() - 0.5) * 8;
+  }
+
+  firefliesGeometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(positionArray, 3),
+  );
+
+  // Material
+  const firefliesMaterial = new THREE.PointsMaterial({
+    size: 8,
+    sizeAttenuation: false,
+    color: 'orange',
+    map: particleTexture,
+    alphaMap: particleTexture,
+    // alphaTest: 0.0001,
+    // depthTest: false,
+    // depthWrite: false,
+    blending: AdditiveBlending,
+  });
+
+  // Points
+  const fireflies = new THREE.Points(firefliesGeometry, firefliesMaterial);
+  scene.add(fireflies);
 });
 
 /*************************
@@ -353,6 +393,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.sortObjects = false;
 
 /*************************
  ******** SHADOWS
@@ -387,7 +428,8 @@ tick();
  ******** DEBUG
  *************************/
 
-// const gui = new dat.GUI();
+// const gui = new dat.GUI({ width: 400 });
+
 // Light
 // gui.add(directionalLight.position, 'x').min(-5).max(10).step(0.01);
 // gui.add(directionalLight.position, 'y').min(-5).max(10).step(0.01);
