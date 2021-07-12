@@ -1,14 +1,21 @@
 // CSS
 import './style.css';
-// JS
+// THREE
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { AdditiveBlending, CullFaceNone } from 'three';
+// DEBUGGER
 import * as dat from 'dat.gui';
+// GSAP
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
-import { AdditiveBlending, CullFaceNone } from 'three';
 gsap.registerPlugin(ScrollTrigger);
+// SHADERS – added rule to webpack
+import firefliesVertexShader from './shaders/fireflies/vertex.glsl';
+import firefliesFragmentShader from './shaders/fireflies/fragment.glsl';
+import { AUTHENTIC_DATA } from 'dns-packet';
 
 /*************************
  ******** CANVAS
@@ -268,34 +275,65 @@ gltfLoader.load('models/dino.gltf', (gltf) => {
   // Fill with random coords in space
   const firefliesCount = 38;
   const positionArray = new Float32Array(firefliesCount * 3);
+  const scaleArray = new Float32Array(firefliesCount);
 
   for (let i = 0; i < firefliesCount; i++) {
     positionArray[i * 3 + 0] = (Math.random() - 0.5) * 8;
     positionArray[i * 3 + 1] = Math.random() * 2;
     positionArray[i * 3 + 2] = (Math.random() - 0.5) * 8;
+
+    scaleArray[i] = Math.random();
   }
 
   firefliesGeometry.setAttribute(
     'position',
     new THREE.BufferAttribute(positionArray, 3),
   );
+  firefliesGeometry.setAttribute(
+    'aScale',
+    new THREE.BufferAttribute(scaleArray, 1),
+  );
 
   // Material
-  const firefliesMaterial = new THREE.PointsMaterial({
-    size: 8,
-    sizeAttenuation: false,
-    color: 'orange',
-    map: particleTexture,
-    alphaMap: particleTexture,
+  const firefliesMaterial = new THREE.ShaderMaterial({
+    // POINTS MATERIAL SETTINGS
+    // size: 8,
+    // sizeAttenuation: false,
+    // color: 'orange',
+    // map: particleTexture,
+    // alphaMap: particleTexture,
     // alphaTest: 0.0001,
     // depthTest: false,
-    // depthWrite: false,
+    depthWrite: false,
     blending: AdditiveBlending,
+    transparent: true,
+    // SHADERS
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+      uSize: { value: 20 },
+    },
+    vertexShader: firefliesVertexShader,
+    fragmentShader: firefliesFragmentShader,
   });
 
   // Points
   const fireflies = new THREE.Points(firefliesGeometry, firefliesMaterial);
   scene.add(fireflies);
+
+  // Copy of renderer for animation test
+  const tick = () => {
+    const elapsedTime = clock.getElapsedTime();
+
+    // Update materials
+    firefliesMaterial.uniforms.uTime.value = elapsedTime;
+    // Renderer
+    renderer.render(scene, camera);
+    // Call tick again on next freme
+    window.requestAnimationFrame(tick);
+  };
+
+  tick();
 });
 
 /*************************
@@ -393,7 +431,6 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.sortObjects = false;
 
 /*************************
  ******** SHADOWS
@@ -402,11 +439,19 @@ renderer.sortObjects = false;
 // renderer.shadowMap.enabled = true;
 
 /*************************
+ ******** SHADOWS
+ *************************/
+
+const clock = new THREE.Clock();
+
+/*************************
  ******** TICK
  *************************/
 
 const tick = () => {
+  // Renderer
   renderer.render(scene, camera);
+  // Call tick again on next freme
   window.requestAnimationFrame(tick);
 };
 
